@@ -184,92 +184,88 @@
   <script>
 
     let state = [];
-
     function drawTable(records){
-      let html='';
-      let result = document.querySelector('#result');
-      
-      for(let rec of records){
-        html+=`<tr>
-         <td>${rec.character}</td>
-         <td>${rec.gameSeries}</td>
-         <td>
-           <img src="${rec.image}">
-         </td>
-         <td>
-           ${rec.release.na}
-         </td>
-         <td>
-           <button onclick="viewDetails('${rec.head}', '${rec.tail}')">View Details</button>
-         </td>
-       </tr>`;
-       
-      }
-    
-      result.innerHTML = html;
-    
-    }
+  let html='';
+  let result = document.querySelector('#result');
+  
+  for(let rec of records){
+    html+=`<tr>
+     <td>${rec.character}</td>
+     <td>${rec.gameSeries}</td>
+     <td>
+       <img src="${rec.image}">
+     </td>
+     <td>
+       ${rec.release.na}
+     </td>
+     <td>
+       <button onclick="viewDetails('${rec.head}', '${rec.tail}')">View Details</button>
+     </td>
+   </tr>`;
+   
+  }
 
-    async function getData(){
-      const response = await fetch('https://amiiboapi.com/api/amiibo/?showusage');
+  result.innerHTML = html;
+
+}
+   
+async function getData() {
+      const response = await fetch('https://amiiboapi.com/api/amiibo/');
       const data = await response.json();
-      return data.amiibo.slice(0, 100);//gets first 100 items (too much data)
+      return data.amiibo.slice(0, 100); // Get first 100 items
     }
 
-    async function showAllGames(){
-        state = await getData();
-        drawTable(state);
+    async function showAllGames() {
+      state = await getData();
+      drawTable(state);
     }
 
-    function filterBySeries(series){
-    
+    function filterBySeries(series) {
       let filtered = [];
-      
-      for(let rec of state){
-        if (rec.gameSeries === series)
+
+      for (let rec of state) {
+        if (rec.gameSeries === series) {
           filtered.push(rec);
+        }
       }
-      
+
       drawTable(filtered);
-    
     }
 
-    function search(){
-      //get the search term from the input field
+    function search() {
       let searchKey = document.querySelector('#searchKey').value;
-      
       let results = [];
-    
-      //iterate all the records in the global state
-      for(let rec of state){
-    
-        //capitalize the search term and text to be case insensitive
+
+      for (let rec of state) {
         let searchText = rec.character.toUpperCase();
         searchKey = searchKey.toUpperCase();
-    
-        //add to resulting array if search term is in the text
-        if ( searchText.search(searchKey) !== -1 ){
+
+        if (searchText.includes(searchKey)) {
           results.push(rec);
         }
-    
-        //draw table with the search results
-        drawTable(results);
-      
       }
+
+      drawTable(results);
     }
 
-    //retrieves a record from state using the head and tail
-    function getRecord(head, tail){
-      for(let rec of state){
-        if (rec.head === head && rec.tail === tail){
+    function nameCompare(a, b) {
+      return a.character.localeCompare(b.character);
+    }
+
+    function sortByName() {
+      let result = state.sort(nameCompare);
+      drawTable(result);
+    }
+
+    function getRecord(head, tail) {
+      for (let rec of state) {
+        if (rec.head === head && rec.tail === tail) {
           return rec;
         }
       }
     }
 
-    //shows the character name and related games on the screen
-    function viewDetails(head, tail){
-
+    function viewDetails(head, tail) {
       let record = getRecord(head, tail);
 
       let character = document.querySelector('#character');
@@ -277,26 +273,19 @@
 
       let html = '';
 
-      for(let game of record.gamesSwitch){
-        html+=`<li>${game.gameName}</li>`;
+      if (record.games) {
+        for (let game of record.games) {
+          html += `<li>${game.name}</li>`;
+        }
+      } else {
+        html = '<li>No supported games found</li>';
       }
-      
+
       character.innerHTML = record.character;
       result.innerHTML = html;
     }
 
-    //compares the character fields of the items in the array
-    function nameCompare(a, b){
-      return a.character.localeCompare(b.character);
-    }
-    
-    function sortByName(){
-      let result = state.sort(nameCompare);
-      drawTable(result);
-    }
-
-    showAllGames();    
-    
+    showAllGames();
   </script>
 </body>
 
